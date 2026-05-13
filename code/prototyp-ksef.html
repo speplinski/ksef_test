@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>KSeF Connect — koncept integracji</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #fbfbfc;
+    --border: #e6e8eb;
+    --border-strong: #d2d6dc;
+    --text: #0f172a;
+    --text-2: #4b5563;
+    --text-3: #8b91a1;
+    --primary: #1f2a44;
+    --primary-2: #2c3a5e;
+    --accent: #2f5af3;
+    --accent-soft: #e8eefc;
+    --success: #0f8f5b;
+    --success-soft: #e1f5ec;
+    --warning: #b76b00;
+    --warning-soft: #fcefd9;
+    --danger: #c0342a;
+    --danger-soft: #fbe5e3;
+    --info: #1f6feb;
+    --info-soft: #e6efff;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 1px rgba(15,23,42,.03);
+    --shadow-md: 0 6px 16px rgba(15,23,42,.06), 0 2px 4px rgba(15,23,42,.04);
+    --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  button { font-family: inherit; cursor: pointer; }
+  a { color: inherit; }
+
+  /* Layout */
+  .app { display: grid; grid-template-columns: 248px 1fr; grid-template-rows: 56px 1fr; min-height: 100vh; }
+  .topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 0 20px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; }
+  .brand .logo { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, #1f2a44, #2c3a5e); position: relative; box-shadow: var(--shadow-sm); }
+  .brand .logo::after { content: ""; position: absolute; inset: 6px; border-radius: 3px; background: rgba(255,255,255,.18); }
+  .brand .title { font-size: 14px; }
+  .brand .subtitle { font-size: 11px; color: var(--text-3); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+  .env { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; background: var(--warning-soft); color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 20%, white); }
+  .env .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--warning); }
+  .topbar .grow { flex: 1; }
+  .search { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); width: 320px; color: var(--text-3); font-size: 13px; }
+  .search input { border: 0; background: transparent; outline: none; flex: 1; font: inherit; color: var(--text); }
+  .kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px solid var(--border); border-radius: 4px; color: var(--text-3); background: white; }
+  .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; color: var(--text-2); }
+  .icon-btn:hover { background: var(--surface-2); }
+  .user { display: inline-flex; align-items: center; gap: 8px; padding-left: 10px; border-left: 1px solid var(--border); margin-left: 4px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #dde2ee; color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; }
+
+  /* Sidebar */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 56px; height: calc(100vh - 56px); overflow: auto; }
+  .nav-section { margin-top: 14px; padding: 0 8px 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); color: var(--text-2); text-decoration: none; font-size: 13px; border: 1px solid transparent; cursor: pointer; }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 15%, white); }
+  .nav-item .badge { margin-left: auto; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+  .nav-item.active .badge { background: white; color: var(--accent); border-color: color-mix(in srgb, var(--accent) 20%, white); }
+  .nav-item svg { width: 16px; height: 16px; flex: 0 0 16px; }
+
+  .sidebar .footer { margin-top: auto; padding: 10px; font-size: 12px; color: var(--text-3); display: flex; flex-direction: column; gap: 6px; }
+  .sidebar .footer .status { display: inline-flex; align-items: center; gap: 6px; }
+  .sidebar .footer .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
+
+  /* Main */
+  .main { padding: 24px 28px 60px; min-width: 0; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .page-head h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+  .page-head p { margin: 4px 0 0; color: var(--text-2); font-size: 13px; }
+  .actions { display: flex; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn.primary:hover { background: var(--primary-2); }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+  .btn.ghost:hover { background: var(--surface-2); color: var(--text); }
+  .btn svg { width: 14px; height: 14px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+  .tab { padding: 10px 4px; margin-right: 16px; font-size: 13px; color: var(--text-2); border-bottom: 2px solid transparent; cursor: pointer; font-weight: 500; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-color: var(--primary); }
+  .tab .count { font-size: 11px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); margin-left: 6px; }
+
+  /* Cards / KPI */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); }
+  .card.kpi .label { font-size: 12px; color: var(--text-3); font-weight: 500; }
+  .card.kpi .value { font-size: 24px; font-weight: 600; letter-spacing: -.01em; margin-top: 6px; display: flex; align-items: baseline; gap: 8px; }
+  .card.kpi .unit { font-size: 12px; color: var(--text-3); font-weight: 500; }
+  .card.kpi .delta { font-size: 12px; margin-top: 6px; color: var(--text-2); display: inline-flex; align-items: center; gap: 4px; }
+  .delta.up { color: var(--success); }
+  .delta.down { color: var(--danger); }
+
+  /* Two col area */
+  .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .panel-head h3 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -.005em; }
+  .panel-head .meta { font-size: 12px; color: var(--text-3); }
+  .panel-actions { display: flex; gap: 6px; }
+  .chip-btn { font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text-2); cursor: pointer; }
+  .chip-btn:hover { background: var(--surface-2); color: var(--text); }
+  .chip-btn.active { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 20%, white); }
+
+  /* Chart */
+  .chart { height: 180px; width: 100%; }
+  .chart-legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .chart-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* Activity list */
+  .activity { display: flex; flex-direction: column; }
+  .activity .item { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--border); align-items: flex-start; }
+  .activity .item:last-child { border-bottom: 0; }
+  .activity .ic { width: 28px; height: 28px; border-radius: 8px; background: var(--surface-2); display: inline-flex; align-items: center; justify-content: center; color: var(--text-2); border: 1px solid var(--border); }
+  .activity .ic.ok { background: var(--success-soft); color: var(--success); border-color: color-mix(in srgb, var(--success) 15%, white); }
+  .activity .ic.warn { background: var(--warning-soft); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 15%, white); }
+  .activity .ic.err { background: var(--danger-soft); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 15%, white); }
+  .activity .ic.info { background: var(--info-soft); color: var(--info); border-color: color-mix(in srgb, var(--info) 15%, white); }
+  .activity .ic svg { width: 14px; height: 14px; }
+  .activity .text { font-size: 13px; color: var(--text); }
+  .activity .text .meta { display: block; font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .activity .time { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+
+  /* Table */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+  .table-toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .table-toolbar .grow { flex: 1; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button { background: var(--surface); border: 0; padding: 6px 10px; font-size: 12px; color: var(--text-2); border-right: 1px solid var(--border); }
+  .seg button:last-child { border-right: 0; }
+  .seg button.active { background: var(--surface-2); color: var(--text); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { text-align: left; font-weight: 500; font-size: 12px; color: var(--text-3); padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent-soft) 35%, white); cursor: pointer; }
+  td .mono { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+  td .num { text-align: right; }
+  .right { text-align: right; }
+
+  /* Status pills */
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid transparent; }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .pill.ok    { background: var(--success-soft); color: var(--success); border-color: color-mix(in srgb, var(--success) 18%, white); }
+  .pill.ok .dot { background: var(--success); }
+  .pill.warn  { background: var(--warning-soft); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 18%, white); }
+  .pill.warn .dot { background: var(--warning); }
+  .pill.err   { background: var(--danger-soft); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 18%, white); }
+  .pill.err .dot { background: var(--danger); }
+  .pill.info  { background: var(--info-soft); color: var(--info); border-color: color-mix(in srgb, var(--info) 18%, white); }
+  .pill.info .dot { background: var(--info); }
+  .pill.neutral { background: var(--surface-2); color: var(--text-2); border-color: var(--border); }
+  .pill.neutral .dot { background: var(--text-3); }
+
+  /* Drawer */
+  .drawer-mask { position: fixed; inset: 0; background: rgba(15,23,42,.35); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 40; }
+  .drawer-mask.open { opacity: 1; pointer-events: auto; }
+  .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 560px; background: var(--surface); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .25s ease; z-index: 41; display: flex; flex-direction: column; box-shadow: -16px 0 32px rgba(15,23,42,.08); }
+  .drawer.open { transform: translateX(0); }
+  .drawer header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .drawer header h2 { margin: 0; font-size: 15px; }
+  .drawer header .sub { color: var(--text-3); font-size: 12px; }
+  .drawer .body { padding: 18px 20px; overflow: auto; }
+  .drawer .body section { margin-bottom: 22px; }
+  .drawer .body section h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 6px 14px; font-size: 13px; }
+  .kv .k { color: var(--text-3); }
+  .kv .v { color: var(--text); }
+  .kv .v.mono { font-family: var(--mono); font-size: 12px; }
+  .timeline { display: flex; flex-direction: column; gap: 4px; }
+  .timeline .step { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 6px 0; position: relative; }
+  .timeline .step::before { content: ""; position: absolute; left: 10px; top: 18px; bottom: -6px; width: 2px; background: var(--border); }
+  .timeline .step:last-child::before { display: none; }
+  .timeline .step .marker { width: 22px; height: 22px; border-radius: 50%; background: var(--success-soft); color: var(--success); display: inline-flex; align-items: center; justify-content: center; z-index: 1; border: 1px solid color-mix(in srgb, var(--success) 20%, white); font-size: 11px; }
+  .timeline .step.pending .marker { background: var(--surface-2); color: var(--text-3); border-color: var(--border); }
+  .timeline .step.err .marker { background: var(--danger-soft); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 20%, white); }
+  .timeline .step .label { font-size: 13px; }
+  .timeline .step .label .meta { display: block; font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .drawer .footer { margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; background: var(--surface-2); }
+
+  /* Modal */
+  .modal-mask { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .modal-mask.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 12px; width: 640px; max-width: 92vw; box-shadow: 0 24px 64px rgba(15,23,42,.18); overflow: hidden; }
+  .modal header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .modal header h2 { margin: 0; font-size: 15px; }
+  .modal .body { padding: 18px 20px; }
+  .modal .footer { padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface-2); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; color: var(--text-3); font-weight: 500; }
+  .field input, .field select, .field textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
+  .field input:focus, .field select:focus { outline: 2px solid color-mix(in srgb, var(--accent) 30%, white); border-color: var(--accent); }
+  .field .hint { font-size: 11px; color: var(--text-3); }
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; flex: 1; min-width: 160px; background: var(--surface); }
+  .radio.checked { border-color: var(--accent); background: var(--accent-soft); }
+  .radio .t { font-weight: 600; font-size: 13px; }
+  .radio .d { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+  /* Misc */
+  .muted { color: var(--text-3); }
+  .hr { height: 1px; background: var(--border); margin: 14px 0; }
+  .footnote { font-size: 11px; color: var(--text-3); margin-top: 24px; line-height: 1.6; }
+  .hide { display: none !important; }
+
+  /* Empty state */
+  .empty { padding: 60px 20px; text-align: center; color: var(--text-3); }
+  .empty h3 { color: var(--text); margin: 6px 0 4px; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <div class="title">KSeF Connect</div>
+        <div class="subtitle">Integracja z Krajowym Systemem e-Faktur</div>
+      </div>
+    </div>
+    <span class="env" title="Aktywne środowisko"><span class="dot"></span> Środowisko: TEST</span>
+    <div class="grow"></div>
+    <label class="search" aria-label="Szukaj">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input placeholder="Szukaj po numerze, NIP, KSeF ID…" />
+      <span class="kbd">⌘K</span>
+    </label>
+    <button class="icon-btn" title="Powiadomienia">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9Z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+    </button>
+    <button class="icon-btn" title="Pomoc">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .8-1.5 1.2-1.5 2.5"/><circle cx="12" cy="17" r="0.6" fill="currentColor"/></svg>
+    </button>
+    <div class="user">
+      <div class="avatar">SK</div>
+      <div style="line-height:1.15">
+        <div style="font-size:13px;font-weight:500">S. Kowalska</div>
+        <div style="font-size:11px;color:var(--text-3)">ACME Sp. z o.o. · NIP 1234567890</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a class="nav-item active" data-view="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Pulpit
+    </a>
+    <a class="nav-item" data-view="outgoing">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+      Faktury wystawione
+      <span class="badge">128</span>
+    </a>
+    <a class="nav-item" data-view="incoming">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+      Faktury otrzymane
+      <span class="badge">47</span>
+    </a>
+    <a class="nav-item" data-view="sessions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+      Sesje API
+    </a>
+    <a class="nav-item" data-view="upo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3Z"/></svg>
+      UPO i archiwum
+    </a>
+
+    <div class="nav-section">Konfiguracja</div>
+    <a class="nav-item" data-view="auth">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg>
+      Uwierzytelnianie
+    </a>
+    <a class="nav-item" data-view="roles">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M2 21c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="6" r="2.2"/><path d="M22 17c0-2.5-2-4-5-4"/></svg>
+      Uprawnienia
+    </a>
+    <a class="nav-item" data-view="contractors">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M9 14h6"/></svg>
+      Kontrahenci
+    </a>
+    <a class="nav-item" data-view="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1A2 2 0 1 1 4.4 17l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.4l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1A2 2 0 1 1 19.6 7l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+      Ustawienia
+    </a>
+
+    <div class="footer">
+      <div class="status"><span class="dot"></span> API KSeF: operacyjny</div>
+      <div>Schema FA(3) · v1.0.4</div>
+      <div>Build: koncept 0.1 · agnostyczny</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- =============================== DASHBOARD =============================== -->
+    <section data-pane="dashboard">
+      <div class="page-head">
+        <div>
+          <h1>Pulpit integracji</h1>
+          <p>Stan synchronizacji z KSeF dla ACME Sp. z o.o. — ostatnie 30 dni.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="btn-refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+            Odśwież
+          </button>
+          <button class="btn" id="btn-import">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m6 9 6-6 6 6"/><path d="M5 21h14"/></svg>
+            Import XML / CSV
+          </button>
+          <button class="btn primary" id="btn-new">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            Nowa faktura
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="grid-4">
+        <div class="card kpi">
+          <div class="label">Wysłane do KSeF (30d)</div>
+          <div class="value">128 <span class="unit">faktur</span></div>
+          <div class="delta up">▲ +12% vs poprzedni okres</div>
+        </div>
+        <div class="card kpi">
+          <div class="label">Otrzymane od kontrahentów</div>
+          <div class="value">47 <span class="unit">faktur</span></div>
+          <div class="delta up">▲ +8 nowych dziś</div>
+        </div>
+        <div class="card kpi">
+          <div class="label">Oczekujące na UPO</div>
+          <div class="value">3 <span class="unit">faktury</span></div>
+          <div class="delta">średni czas: 2 min 14 s</div>
+        </div>
+        <div class="card kpi">
+          <div class="label">Odrzucone / błędy walidacji</div>
+          <div class="value">2 <span class="unit">faktury</span></div>
+          <div class="delta down">▼ wymaga interwencji</div>
+        </div>
+      </div>
+
+      <!-- Two-column -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="panel-head">
+            <div>
+              <h3>Przepływ faktur</h3>
+              <div class="meta">Wystawione vs. otrzymane — ostatnie 30 dni</div>
+            </div>
+            <div class="panel-actions">
+              <button class="chip-btn">7d</button>
+              <button class="chip-btn active">30d</button>
+              <button class="chip-btn">90d</button>
+            </div>
+          </div>
+          <svg class="chart" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="g-out" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#2f5af3" stop-opacity=".25"/>
+                <stop offset="100%" stop-color="#2f5af3" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="g-in" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#0f8f5b" stop-opacity=".22"/>
+                <stop offset="100%" stop-color="#0f8f5b" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <!-- grid -->
+            <g stroke="#eef0f3">
+              <line x1="0" y1="40" x2="600" y2="40"/>
+              <line x1="0" y1="80" x2="600" y2="80"/>
+              <line x1="0" y1="120" x2="600" y2="120"/>
+              <line x1="0" y1="160" x2="600" y2="160"/>
+            </g>
+            <!-- outgoing -->
+            <path d="M0,150 C40,140 70,90 110,110 C150,130 180,70 220,80 C260,90 290,40 330,60 C370,80 400,50 440,40 C480,30 520,70 560,50 L600,55 L600,200 L0,200 Z" fill="url(#g-out)"/>
+            <path d="M0,150 C40,140 70,90 110,110 C150,130 180,70 220,80 C260,90 290,40 330,60 C370,80 400,50 440,40 C480,30 520,70 560,50 L600,55" fill="none" stroke="#2f5af3" stroke-width="2"/>
+            <!-- incoming -->
+            <path d="M0,170 C40,165 80,160 120,150 C160,140 200,150 240,140 C280,130 320,135 360,125 C400,115 440,125 480,115 C520,108 560,100 600,105 L600,200 L0,200 Z" fill="url(#g-in)"/>
+            <path d="M0,170 C40,165 80,160 120,150 C160,140 200,150 240,140 C280,130 320,135 360,125 C400,115 440,125 480,115 C520,108 560,100 600,105" fill="none" stroke="#0f8f5b" stroke-width="2"/>
+            <!-- xlabels -->
+            <g fill="#8b91a1" font-size="10" font-family="ui-monospace, Menlo, monospace">
+              <text x="0" y="195">13.04</text>
+              <text x="150" y="195">20.04</text>
+              <text x="300" y="195">27.04</text>
+              <text x="450" y="195">04.05</text>
+              <text x="560" y="195">13.05</text>
+            </g>
+          </svg>
+          <div class="chart-legend">
+            <span><i style="background:#2f5af3"></i> Wystawione</span>
+            <span><i style="background:#0f8f5b"></i> Otrzymane</span>
+            <span style="margin-left:auto;color:var(--text-3)">aktualizacja przed chwilą</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="panel-head">
+            <h3>Strumień zdarzeń</h3>
+            <a class="btn ghost" style="padding:4px 8px">zobacz wszystkie</a>
+          </div>
+          <div class="activity">
+            <div class="item">
+              <div class="ic ok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg>
+              </div>
+              <div class="text">UPO wystawione dla <b>FV/2026/05/0128</b>
+                <span class="meta">numer KSeF: <span style="font-family:var(--mono)">202605131234-AB17F2-C0DE</span></span>
+              </div>
+              <div class="time">14:02</div>
+            </div>
+            <div class="item">
+              <div class="ic info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+              </div>
+              <div class="text">Wysłano <b>3 faktury</b> w trybie wsadowym
+                <span class="meta">sesja batch #B-4419 · 2 zaakceptowane, 1 w toku</span>
+              </div>
+              <div class="time">13:58</div>
+            </div>
+            <div class="item">
+              <div class="ic warn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+              </div>
+              <div class="text">Token uwierzytelniający wygasa za <b>6 dni</b>
+                <span class="meta">odnów w sekcji Uwierzytelnianie › Tokeny</span>
+              </div>
+              <div class="time">13:11</div>
+            </div>
+            <div class="item">
+              <div class="ic err">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>
+              </div>
+              <div class="text">Walidacja XML odrzucona dla <b>FV/2026/05/0125</b>
+                <span class="meta">błąd 21102: nieprawidłowy NIP nabywcy</span>
+              </div>
+              <div class="time">12:46</div>
+            </div>
+            <div class="item">
+              <div class="ic info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+              </div>
+              <div class="text">Pobrano <b>5 faktur</b> od kontrahentów
+                <span class="meta">m.in. Beta Studio (3), Logistyka Plus (2)</span>
+              </div>
+              <div class="time">12:02</div>
+            </div>
+            <div class="item">
+              <div class="ic ok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg>
+              </div>
+              <div class="text">Sesja interaktywna nawiązana
+                <span class="meta">uwierzytelnienie: pieczęć kwalifikowana · ważność 6 h</span>
+              </div>
+              <div class="time">11:00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 18px"></div>
+
+      <!-- Quick split: outgoing snapshot + incoming snapshot -->
+      <div class="grid-2">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <h3 style="margin:0;font-size:14px">Ostatnie faktury wystawione</h3>
+            <div class="grow"></div>
+            <button class="btn ghost" data-goto="outgoing">Zobacz wszystkie →</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Numer</th><th>Nabywca</th><th class="right">Kwota</th><th>Status KSeF</th>
+              </tr>
+            </thead>
+            <tbody id="outgoing-mini"></tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <h3 style="margin:0;font-size:14px">Ostatnie faktury otrzymane</h3>
+            <div class="grow"></div>
+            <button class="btn ghost" data-goto="incoming">Zobacz wszystkie →</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Sprzedawca</th><th>Numer</th><th class="right">Kwota</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="incoming-mini"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="footnote">
+        Koncept agnostyczny: dane przykładowe. Statusy zgodne z FA(3) — „Wysłana”, „Przetwarzana”, „Zaakceptowana” (z numerem KSeF i UPO), „Odrzucona” (z kodem błędu).
+        Środowisko TEST oznacza, że żadne dokumenty nie są wprowadzane do obrotu prawnego.
+      </p>
+    </section>
+
+    <!-- =============================== OUTGOING =============================== -->
+    <section data-pane="outgoing" class="hide">
+      <div class="page-head">
+        <div>
+          <h1>Faktury wystawione</h1>
+          <p>Dokumenty wysłane do KSeF w imieniu ACME Sp. z o.o.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="btn-export">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9"/><path d="m6 15 6 6 6-6"/><path d="M5 3h14"/></svg>
+            Eksport
+          </button>
+          <button class="btn" id="btn-import2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m6 9 6-6 6 6"/><path d="M5 21h14"/></svg>
+            Import wsadowy
+          </button>
+          <button class="btn primary" data-open-new="1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            Nowa faktura
+          </button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="all">Wszystkie <span class="count">128</span></div>
+        <div class="tab" data-tab="ok">Zaakceptowane <span class="count">119</span></div>
+        <div class="tab" data-tab="warn">Oczekujące <span class="count">3</span></div>
+        <div class="tab" data-tab="err">Odrzucone <span class="count">2</span></div>
+        <div class="tab" data-tab="draft">Wersje robocze <span class="count">4</span></div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="seg">
+            <button class="active">FA(3)</button>
+            <button>FA(2)</button>
+            <button>Korekty</button>
+            <button>Zaliczkowe</button>
+          </div>
+          <div class="grow"></div>
+          <button class="chip-btn">Data: ostatnie 30 dni</button>
+          <button class="chip-btn">Kontrahent: dowolny</button>
+          <button class="chip-btn">Kwota: dowolna</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px"><input type="checkbox" aria-label="Zaznacz wszystkie"/></th>
+              <th>Numer / data</th>
+              <th>Nabywca</th>
+              <th class="right">Kwota brutto</th>
+              <th>Numer KSeF</th>
+              <th>Status</th>
+              <th>UPO</th>
+            </tr>
+          </thead>
+          <tbody id="outgoing-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =============================== INCOMING =============================== -->
+    <section data-pane="incoming" class="hide">
+      <div class="page-head">
+        <div>
+          <h1>Faktury otrzymane</h1>
+          <p>Dokumenty pobrane z KSeF wystawione przez kontrahentów.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+            Synchronizuj teraz
+          </button>
+          <button class="btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9"/><path d="m6 15 6 6 6-6"/><path d="M5 3h14"/></svg>
+            Eksport (XML + PDF)
+          </button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active">Wszystkie <span class="count">47</span></div>
+        <div class="tab">Nowe <span class="count">8</span></div>
+        <div class="tab">Zaakceptowane</div>
+        <div class="tab">Zakwestionowane</div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="seg">
+            <button class="active">Wszystkie</button>
+            <button>FA(3)</button>
+            <button>Korekty</button>
+          </div>
+          <div class="grow"></div>
+          <button class="chip-btn">Sprzedawca: dowolny</button>
+          <button class="chip-btn">Data: ostatnie 30 dni</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px"><input type="checkbox" aria-label="Zaznacz wszystkie"/></th>
+              <th>Sprzedawca</th>
+              <th>Numer</th>
+              <th class="right">Kwota brutto</th>
+              <th>Numer KSeF</th>
+              <th>Data wpływu</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="incoming-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =============================== SESSIONS =============================== -->
+    <section data-pane="sessions" class="hide">
+      <div class="page-head">
+        <div>
+          <h1>Sesje API</h1>
+          <p>Historia sesji interaktywnych i wsadowych z bramą KSeF.</p>
+        </div>
+        <div class="actions">
+          <button class="btn primary">Nowa sesja</button>
+        </div>
+      </div>
+      <div class="grid-4">
+        <div class="card kpi"><div class="label">Sesji dziś</div><div class="value">14</div><div class="delta">średnio 1.2/h</div></div>
+        <div class="card kpi"><div class="label">Czas odpowiedzi p95</div><div class="value">412 <span class="unit">ms</span></div><div class="delta up">▲ poniżej budżetu (1.5 s)</div></div>
+        <div class="card kpi"><div class="label">Błędy 5xx</div><div class="value">0</div><div class="delta">brak incydentów</div></div>
+        <div class="card kpi"><div class="label">Wykorzystany limit</div><div class="value">28 / 600 <span class="unit">req/min</span></div><div class="delta">spokojnie</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID sesji</th><th>Typ</th><th>Uwierzytelnienie</th><th>Rozpoczęta</th><th>Czas trwania</th><th>Operacji</th><th>Status</th></tr></thead>
+          <tbody id="sessions-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =============================== UPO =============================== -->
+    <section data-pane="upo" class="hide">
+      <div class="page-head">
+        <div>
+          <h1>UPO i archiwum</h1>
+          <p>Urzędowe Poświadczenia Odbioru — przechowywane zgodnie z wymogami przez 10 lat.</p>
+        </div>
+        <div class="actions">
+          <button class="btn">Eksport paczki UPO</button>
+        </div>
+      </div>
+      <div class="empty">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--text-3)"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <h3>119 dokumentów w archiwum</h3>
+        <p>W koncepcie pomijamy listę szczegółową — UPO wyświetla się przy każdej zaakceptowanej fakturze.</p>
+      </div>
+    </section>
+
+    <!-- =============================== AUTH =============================== -->
+    <section data-pane="auth" class="hide">
+      <div class="page-head">
+        <div>
+          <h1>Uwierzytelnianie</h1>
+          <p>Metody dostępu do KSeF i status aktywnych poświadczeń.</p>
+        </div>
+        <div class="actions">
+          <button class="btn">Dodaj metodę</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="panel-head"><h3>Aktywne metody</h3><span class="meta">3 skonfigurowane</span></div>
+          <table>
+            <thead><tr><th>Metoda</th><th>Identyfikator</th><th>Ważność</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Pieczęć kwalifikowana</td><td class="mono">CN=ACME Sp z o o, O=ACME, C=PL</td><td>do 2027-08-14</td><td><span class="pill ok"><span class="dot"></span> aktywna</span></td></tr>
+              <tr><td>Token uwierzytelniający</td><td class="mono">tk_…3F9A</td><td>za 6 dni</td><td><span class="pill warn"><span class="dot"></span> wkrótce wygasa</span></td></tr>
+              <tr><td>Profil zaufany</td><td class="mono">S. Kowalska</td><td>—</td><td><span class="pill neutral"><span class="dot"></span> rezerwowy</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="panel-head"><h3>Wybierz domyślną metodę</h3></div>
+          <div class="radio-group" id="auth-radio">
+            <div class="radio checked"><div class="t">Pieczęć kwalifikowana</div><div class="d">Zalecane dla integracji automatycznej i wsadowej.</div></div>
+            <div class="radio"><div class="t">Token podpisu</div><div class="d">Wymaga jednokrotnego potwierdzenia przez osobę uprawnioną.</div></div>
+            <div class="radio"><div class="t">Profil zaufany</div><div class="d">Do operacji ręcznych przez przeglądarkę.</div></div>
+          </div>
+          <div class="hr"></div>
+          <div class="kv">
+            <div class="k">Endpoint</div><div class="v mono">https://ksef-test.mf.gov.pl/api/online/</div>
+            <div class="k">Środowisko</div><div class="v"><span class="pill warn"><span class="dot"></span> TEST</span></div>
+            <div class="k">Tryb pracy</div><div class="v">Online (interactive) z fallbackiem batch</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================== ROLES =============================== -->
+    <section data-pane="roles" class="hide">
+      <div class="page-head"><div><h1>Uprawnienia</h1><p>Role w obrębie podmiotu i delegacje na osoby/podmioty zewnętrzne.</p></div><div class="actions"><button class="btn primary">Nadaj uprawnienie</button></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Osoba / podmiot</th><th>Identyfikator</th><th>Zakres</th><th>Nadane przez</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>S. Kowalska</td><td class="mono">PESEL …4521</td><td>Wystawianie, odbiór, zarządzanie</td><td>właściciel</td><td><span class="pill ok"><span class="dot"></span> aktywne</span></td></tr>
+            <tr><td>Biuro rachunkowe Omega</td><td class="mono">NIP 9876543210</td><td>Odbiór, podgląd</td><td>S. Kowalska</td><td><span class="pill ok"><span class="dot"></span> aktywne</span></td></tr>
+            <tr><td>J. Nowak</td><td class="mono">PESEL …1183</td><td>Wystawianie</td><td>S. Kowalska</td><td><span class="pill warn"><span class="dot"></span> oczekuje na akceptację</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =============================== CONTRACTORS =============================== -->
+    <section data-pane="contractors" class="hide">
+      <div class="page-head"><div><h1>Kontrahenci</h1><p>Kontrahenci synchronizowani z wykazu podatników (biała lista) i KSeF.</p></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nazwa</th><th>NIP</th><th>Status białej listy</th><th>Wymiana w KSeF</th><th>Faktury (30d)</th></tr></thead>
+          <tbody id="contractors-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =============================== SETTINGS =============================== -->
+    <section data-pane="settings" class="hide">
+      <div class="page-head"><div><h1>Ustawienia</h1><p>Konfiguracja integracji, środowiska i powiadomień.</p></div></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="panel-head"><h3>Środowisko i tryb pracy</h3></div>
+          <div class="kv">
+            <div class="k">Środowisko</div><div class="v"><span class="pill warn"><span class="dot"></span> TEST</span> · <a href="#">przełącz na PROD</a></div>
+            <div class="k">Tryb</div><div class="v">Online z kolejką wsadową (fallback offline 24 h)</div>
+            <div class="k">Schemat</div><div class="v">FA(3) v1.0.4 · wsteczna obsługa FA(2)</div>
+            <div class="k">Numeracja</div><div class="v">FV/{rok}/{mm}/{nnnn} · kontynuacja po przełączeniu</div>
+            <div class="k">Strefa czasowa</div><div class="v">Europe/Warsaw</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="panel-head"><h3>Powiadomienia</h3></div>
+          <div class="kv">
+            <div class="k">Odrzucenie faktury</div><div class="v">e-mail + Slack #księgowość</div>
+            <div class="k">UPO wystawione</div><div class="v">e-mail (zbiorcze, co 1 h)</div>
+            <div class="k">Wygaśnięcie certyfikatu</div><div class="v">14 / 7 / 1 dzień przed</div>
+            <div class="k">Awaria bramy KSeF</div><div class="v">SMS + e-mail + auto-fallback</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- DRAWER: invoice detail -->
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <header>
+    <div style="flex:1">
+      <h2 id="d-title">FV/2026/05/0128</h2>
+      <div class="sub" id="d-sub">Faktura wystawiona · Beta Studio Sp. z o.o. · 2026-05-13</div>
+    </div>
+    <button class="icon-btn" id="drawerClose" aria-label="Zamknij">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M6 18 18 6"/></svg>
+    </button>
+  </header>
+  <div class="body">
+    <section>
+      <h4>Status w KSeF</h4>
+      <div class="timeline" id="d-timeline">
+        <div class="step"><div class="marker">1</div><div class="label">Utworzono dokument FA(3)<span class="meta">13.05.2026 · 13:55:21</span></div></div>
+        <div class="step"><div class="marker">2</div><div class="label">Walidacja XML — OK<span class="meta">13.05.2026 · 13:55:23 · schemat v1.0.4</span></div></div>
+        <div class="step"><div class="marker">3</div><div class="label">Podpis pieczęcią kwalifikowaną<span class="meta">CN=ACME Sp z o o · 13:55:24</span></div></div>
+        <div class="step"><div class="marker">4</div><div class="label">Wysłano do KSeF<span class="meta">sesja S-1138 · 13:55:25</span></div></div>
+        <div class="step"><div class="marker">✓</div><div class="label">UPO wydane — faktura zaakceptowana<span class="meta">14:02:11 · numer KSeF nadany</span></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h4>Identyfikatory</h4>
+      <div class="kv">
+        <div class="k">Numer faktury</div><div class="v">FV/2026/05/0128</div>
+        <div class="k">Numer KSeF</div><div class="v mono">202605131234-AB17F2-C0DE</div>
+        <div class="k">Schemat</div><div class="v">FA(3) · v1.0.4</div>
+        <div class="k">Środowisko</div><div class="v"><span class="pill warn"><span class="dot"></span> TEST</span></div>
+        <div class="k">Sesja</div><div class="v mono">S-1138 (online, interactive)</div>
+        <div class="k">Skrót dokumentu</div><div class="v mono">SHA-256 · 4f2a…91c8</div>
+      </div>
+    </section>
+
+    <section>
+      <h4>Strony</h4>
+      <div class="kv">
+        <div class="k">Sprzedawca</div><div class="v">ACME Sp. z o.o. · NIP 1234567890</div>
+        <div class="k">Nabywca</div><div class="v">Beta Studio Sp. z o.o. · NIP 9876543210</div>
+        <div class="k">Kwota netto</div><div class="v">12 400,00 PLN</div>
+        <div class="k">VAT (23%)</div><div class="v">2 852,00 PLN</div>
+        <div class="k">Kwota brutto</div><div class="v" style="font-weight:600">15 252,00 PLN</div>
+        <div class="k">Termin płatności</div><div class="v">27.05.2026 (14 dni)</div>
+        <div class="k">Metoda płatności</div><div class="v">Przelew · rachunek z białej listy</div>
+      </div>
+    </section>
+
+    <section>
+      <h4>Załączniki i dowody</h4>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2);">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--info)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <div style="flex:1">faktura_FV-2026-05-0128.xml<div class="muted" style="font-size:12px">12 KB · FA(3) · podpisana</div></div>
+          <button class="chip-btn">Pobierz</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2);">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--success)"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <div style="flex:1">UPO_202605131234-AB17F2-C0DE.xml<div class="muted" style="font-size:12px">3 KB · podpisane pieczęcią MF</div></div>
+          <button class="chip-btn">Pobierz</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2);">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-2)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <div style="flex:1">faktura_FV-2026-05-0128.pdf<div class="muted" style="font-size:12px">wizualizacja · 78 KB</div></div>
+          <button class="chip-btn">Pobierz</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="footer">
+    <button class="btn ghost">Wystaw korektę</button>
+    <button class="btn">Pobierz paczkę (XML + UPO)</button>
+    <button class="btn primary" id="drawerCloseFooter">Zamknij</button>
+  </div>
+</aside>
+
+<!-- MODAL: nowa faktura -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <header>
+      <h2 id="modalTitle">Nowa faktura — wyślij do KSeF</h2>
+      <div style="flex:1"></div>
+      <button class="icon-btn" id="modalClose"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+    </header>
+    <div class="body">
+      <div class="radio-group" style="margin-bottom: 16px;">
+        <div class="radio checked"><div class="t">Formularz</div><div class="d">Wprowadź dane krok po kroku.</div></div>
+        <div class="radio"><div class="t">Import XML (FA(3))</div><div class="d">Wczytaj gotowy plik z systemu ERP.</div></div>
+        <div class="radio"><div class="t">Z szablonu</div><div class="d">Skopiuj poprzednią fakturę dla kontrahenta.</div></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Nabywca (NIP)</label><input value="9876543210"/><div class="hint">✓ czynny podatnik VAT · biała lista</div></div>
+        <div class="field"><label>Numer faktury</label><input value="FV/2026/05/0129"/><div class="hint">automatycznie z numeracji</div></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Data wystawienia</label><input type="date" value="2026-05-13"/></div>
+        <div class="field"><label>Data sprzedaży</label><input type="date" value="2026-05-13"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Kwota netto (PLN)</label><input value="12 400,00"/></div>
+        <div class="field"><label>Stawka VAT</label><select><option>23%</option><option>8%</option><option>5%</option><option>0%</option><option>zw.</option></select></div>
+      </div>
+      <div class="field">
+        <label>Pozycje</label>
+        <div class="muted" style="font-size:12px; padding:8px 10px; border:1px dashed var(--border); border-radius:6px;">
+          1 × Usługa projektowa — 12 400,00 PLN netto &nbsp;·&nbsp; <a href="#">+ dodaj pozycję</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="muted" style="font-size:12px;">Po wysyłce faktura otrzyma numer KSeF i UPO.</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn ghost" id="modalCancel">Zapisz jako szkic</button>
+        <button class="btn primary" id="modalSend">Wyślij do KSeF (TEST)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- DATA ----------
+  const outgoing = [
+    { num: "FV/2026/05/0128", date: "2026-05-13", buyer: "Beta Studio Sp. z o.o.", nip: "9876543210", amount: "15 252,00", ksef: "202605131234-AB17F2-C0DE", status: "ok", upo: "tak" },
+    { num: "FV/2026/05/0127", date: "2026-05-13", buyer: "Logistyka Plus S.A.",     nip: "5251112233", amount: "8 610,00",  ksef: "202605130911-99DDA1-AC10", status: "ok", upo: "tak" },
+    { num: "FV/2026/05/0126", date: "2026-05-12", buyer: "Pracownia Druku Sp.k.",   nip: "7770001122", amount: "1 230,00",  ksef: "202605121702-71BB44-7733", status: "ok", upo: "tak" },
+    { num: "FV/2026/05/0125", date: "2026-05-12", buyer: "Tech Hub Sp. z o.o.",     nip: "—",          amount: "4 920,00",  ksef: "—", status: "err", upo: "—", err: "21102 — nieprawidłowy NIP nabywcy" },
+    { num: "FV/2026/05/0124", date: "2026-05-12", buyer: "Mediakit Studio",         nip: "1180022334", amount: "2 460,00",  ksef: "—", status: "warn", upo: "—" },
+    { num: "FV/2026/05/0123", date: "2026-05-11", buyer: "Café Mokka Sp. z o.o.",   nip: "5210099887", amount: "615,00",    ksef: "202605110803-441AAB-FF02", status: "ok", upo: "tak" },
+    { num: "FV/2026/05/0122", date: "2026-05-11", buyer: "Sklep Online Omega",      nip: "9530011223", amount: "11 070,00", ksef: "202605110732-330BBC-1A0E", status: "ok", upo: "tak" },
+    { num: "FV/2026/05/0121", date: "2026-05-11", buyer: "Atelier 7",               nip: "6770088445", amount: "3 200,00",  ksef: "—", status: "warn", upo: "—" },
+    { num: "FV/2026/05/0120", date: "2026-05-10", buyer: "Drukarnia Vega Sp.k.",    nip: "6431122997", amount: "984,00",    ksef: "202605101115-55CCAA-9090", status: "ok", upo: "tak" },
+  ];
+
+  const incoming = [
+    { seller: "Hosting Cloud Sp. z o.o.", nip: "5252212233", num: "INV-2026-44/05", amount: "499,00", ksef: "202605131011-AAA111-2233", date: "2026-05-13", status: "new" },
+    { seller: "Biuro rachunkowe Omega",    nip: "9876543210", num: "FA/05/2026/12",  amount: "1 845,00", ksef: "202605131008-AAA222-2244", date: "2026-05-13", status: "new" },
+    { seller: "Energia PL S.A.",            nip: "5260250995", num: "ENRG/2026/05/22", amount: "634,12", ksef: "202605120904-BBB100-CC10", date: "2026-05-12", status: "accepted" },
+    { seller: "Logistyka Plus S.A.",        nip: "5251112233", num: "LP/05/2026/87",  amount: "2 460,00", ksef: "202605120855-CCD444-AB12", date: "2026-05-12", status: "accepted" },
+    { seller: "Pracownia Druku Sp.k.",      nip: "7770001122", num: "PD/2026/0034",   amount: "320,00",   ksef: "202605110730-EE3399-12CC", date: "2026-05-11", status: "accepted" },
+    { seller: "Tech Subscriptions Ltd.",    nip: "PL5263002233", num: "TS-25600",     amount: "1 089,00", ksef: "202605101009-FF1100-2200", date: "2026-05-10", status: "challenged" },
+  ];
+
+  const sessions = [
+    { id: "S-1141", type: "Interactive", auth: "Pieczęć kwalifikowana", start: "13:58:02", dur: "14 s", ops: 3, status: "ok" },
+    { id: "B-4419", type: "Batch",       auth: "Token tk_…3F9A",         start: "13:55:00", dur: "2 min 11 s", ops: 28, status: "ok" },
+    { id: "S-1138", type: "Interactive", auth: "Pieczęć kwalifikowana", start: "13:11:44", dur: "1 min 02 s", ops: 5, status: "ok" },
+    { id: "S-1137", type: "Interactive", auth: "Profil zaufany",         start: "11:00:12", dur: "8 s",       ops: 1, status: "warn" },
+    { id: "B-4418", type: "Batch",       auth: "Pieczęć kwalifikowana", start: "08:00:01", dur: "4 min 30 s", ops: 119, status: "ok" },
+  ];
+
+  const contractors = [
+    { name: "Beta Studio Sp. z o.o.", nip: "9876543210", white: "ok", ksef: "ok", n: 12 },
+    { name: "Logistyka Plus S.A.",    nip: "5251112233", white: "ok", ksef: "ok", n: 9 },
+    { name: "Energia PL S.A.",        nip: "5260250995", white: "ok", ksef: "ok", n: 1 },
+    { name: "Pracownia Druku Sp.k.",  nip: "7770001122", white: "ok", ksef: "ok", n: 4 },
+    { name: "Tech Subscriptions Ltd.", nip: "PL5263002233", white: "warn", ksef: "ok", n: 2 },
+    { name: "Café Mokka Sp. z o.o.",  nip: "5210099887", white: "ok", ksef: "ok", n: 1 },
+    { name: "Atelier 7",              nip: "6770088445", white: "ok", ksef: "warn", n: 1 },
+  ];
+
+  // ---------- HELPERS ----------
+  function pill(status) {
+    switch (status) {
+      case "ok":   return `<span class="pill ok"><span class="dot"></span> Zaakceptowana</span>`;
+      case "warn": return `<span class="pill warn"><span class="dot"></span> Przetwarzana</span>`;
+      case "err":  return `<span class="pill err"><span class="dot"></span> Odrzucona</span>`;
+      case "new":  return `<span class="pill info"><span class="dot"></span> Nowa</span>`;
+      case "accepted":  return `<span class="pill ok"><span class="dot"></span> Zaakceptowana</span>`;
+      case "challenged":return `<span class="pill warn"><span class="dot"></span> Zakwestionowana</span>`;
+      default: return `<span class="pill neutral"><span class="dot"></span> ${status}</span>`;
+    }
+  }
+  function pillWhite(s) {
+    if (s === "ok") return `<span class="pill ok"><span class="dot"></span> czynny VAT</span>`;
+    if (s === "warn") return `<span class="pill warn"><span class="dot"></span> spoza PL</span>`;
+    return `<span class="pill err"><span class="dot"></span> brak na liście</span>`;
+  }
+  function pillKsef(s) {
+    if (s === "ok") return `<span class="pill ok"><span class="dot"></span> aktywny</span>`;
+    if (s === "warn") return `<span class="pill warn"><span class="dot"></span> niezarejestrowany</span>`;
+    return `<span class="pill neutral"><span class="dot"></span> —</span>`;
+  }
+
+  // ---------- RENDER ----------
+  function renderOutgoing() {
+    const rows = outgoing.map(r => `
+      <tr data-num="${r.num}">
+        <td><input type="checkbox"/></td>
+        <td><div>${r.num}</div><div class="muted" style="font-size:12px">${r.date}</div></td>
+        <td><div>${r.buyer}</div><div class="muted" style="font-size:12px">NIP ${r.nip}</div></td>
+        <td class="right">${r.amount} PLN</td>
+        <td><span class="mono">${r.ksef}</span>${r.err ? `<div class="muted" style="font-size:12px;color:var(--danger)">${r.err}</div>` : ""}</td>
+        <td>${pill(r.status)}</td>
+        <td>${r.upo === "tak" ? `<span class="pill ok"><span class="dot"></span> UPO</span>` : `<span class="muted">—</span>`}</td>
+      </tr>`).join("");
+    document.getElementById("outgoing-table").innerHTML = rows;
+    // mini
+    document.getElementById("outgoing-mini").innerHTML = outgoing.slice(0, 5).map(r => `
+      <tr data-num="${r.num}">
+        <td><div>${r.num}</div><div class="muted" style="font-size:12px">${r.date}</div></td>
+        <td>${r.buyer}</td>
+        <td class="right">${r.amount} PLN</td>
+        <td>${pill(r.status)}</td>
+      </tr>`).join("");
+  }
+
+  function renderIncoming() {
+    const rows = incoming.map(r => `
+      <tr>
+        <td><input type="checkbox"/></td>
+        <td><div>${r.seller}</div><div class="muted" style="font-size:12px">NIP ${r.nip}</div></td>
+        <td>${r.num}</td>
+        <td class="right">${r.amount} PLN</td>
+        <td class="mono">${r.ksef}</td>
+        <td>${r.date}</td>
+        <td>${pill(r.status)}</td>
+      </tr>`).join("");
+    document.getElementById("incoming-table").innerHTML = rows;
+    document.getElementById("incoming-mini").innerHTML = incoming.slice(0, 5).map(r => `
+      <tr>
+        <td>${r.seller}</td>
+        <td>${r.num}</td>
+        <td class="right">${r.amount} PLN</td>
+        <td>${pill(r.status)}</td>
+      </tr>`).join("");
+  }
+
+  function renderSessions() {
+    document.getElementById("sessions-table").innerHTML = sessions.map(s => `
+      <tr>
+        <td class="mono">${s.id}</td>
+        <td>${s.type}</td>
+        <td>${s.auth}</td>
+        <td>${s.start}</td>
+        <td>${s.dur}</td>
+        <td>${s.ops}</td>
+        <td>${pill(s.status)}</td>
+      </tr>`).join("");
+  }
+
+  function renderContractors() {
+    document.getElementById("contractors-table").innerHTML = contractors.map(c => `
+      <tr>
+        <td>${c.name}</td>
+        <td class="mono">${c.nip}</td>
+        <td>${pillWhite(c.white)}</td>
+        <td>${pillKsef(c.ksef)}</td>
+        <td>${c.n}</td>
+      </tr>`).join("");
+  }
+
+  renderOutgoing();
+  renderIncoming();
+  renderSessions();
+  renderContractors();
+
+  // ---------- NAVIGATION ----------
+  const navItems = document.querySelectorAll(".nav-item");
+  const panes = document.querySelectorAll("section[data-pane]");
+  function go(view) {
+    navItems.forEach(n => n.classList.toggle("active", n.dataset.view === view));
+    panes.forEach(p => p.classList.toggle("hide", p.dataset.pane !== view));
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+  navItems.forEach(n => n.addEventListener("click", () => go(n.dataset.view)));
+  document.querySelectorAll("[data-goto]").forEach(el => el.addEventListener("click", () => go(el.dataset.goto)));
+
+  // ---------- TABLE ROW CLICK -> DRAWER ----------
+  const drawer = document.getElementById("drawer");
+  const drawerMask = document.getElementById("drawerMask");
+  function openDrawer() { drawer.classList.add("open"); drawerMask.classList.add("open"); }
+  function closeDrawer() { drawer.classList.remove("open"); drawerMask.classList.remove("open"); }
+  document.addEventListener("click", (e) => {
+    const tr = e.target.closest("tbody tr[data-num]");
+    if (tr) {
+      const num = tr.getAttribute("data-num");
+      const r = outgoing.find(x => x.num === num);
+      if (r) {
+        document.getElementById("d-title").textContent = r.num;
+        document.getElementById("d-sub").textContent = `Faktura wystawiona · ${r.buyer} · ${r.date}`;
+      }
+      openDrawer();
+    }
+  });
+  document.getElementById("drawerClose").addEventListener("click", closeDrawer);
+  document.getElementById("drawerCloseFooter").addEventListener("click", closeDrawer);
+  drawerMask.addEventListener("click", closeDrawer);
+
+  // ---------- MODAL ----------
+  const modal = document.getElementById("modalMask");
+  function openModal() { modal.classList.add("open"); }
+  function closeModal() { modal.classList.remove("open"); }
+  document.getElementById("btn-new").addEventListener("click", openModal);
+  document.querySelectorAll('[data-open-new]').forEach(b => b.addEventListener("click", openModal));
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+  document.getElementById("modalCancel").addEventListener("click", closeModal);
+  document.getElementById("modalSend").addEventListener("click", () => {
+    closeModal();
+    setTimeout(() => {
+      openDrawer();
+    }, 200);
+  });
+
+  // ---------- radio toggle ----------
+  document.querySelectorAll(".radio-group").forEach(group => {
+    group.addEventListener("click", e => {
+      const r = e.target.closest(".radio");
+      if (!r) return;
+      group.querySelectorAll(".radio").forEach(x => x.classList.remove("checked"));
+      r.classList.add("checked");
+    });
+  });
+
+  // ---------- chip toggle ----------
+  document.querySelectorAll(".panel-actions").forEach(g => {
+    g.addEventListener("click", e => {
+      const b = e.target.closest(".chip-btn");
+      if (!b) return;
+      g.querySelectorAll(".chip-btn").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+    });
+  });
+
+  // ---------- tabs ----------
+  document.querySelectorAll(".tabs").forEach(g => {
+    g.addEventListener("click", e => {
+      const t = e.target.closest(".tab");
+      if (!t) return;
+      g.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+    });
+  });
+
+  // refresh demo
+  document.getElementById("btn-refresh").addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    const original = btn.innerHTML;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="50 80"/></svg> Synchronizuję…`;
+    setTimeout(() => btn.innerHTML = original, 900);
+  });
+
+  // keyboard
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") { closeDrawer(); closeModal(); }
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); document.querySelector(".search input").focus(); }
+  });
+</script>
+</body>
+</html>
