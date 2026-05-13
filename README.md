@@ -2,6 +2,9 @@
 
 Prototyp interfejsu integracji z Krajowym Systemem e-Faktur (KSeF). Agnostyczny — bez brandingu, neutralna paleta, gotowy do iteracji.
 
+**Live preview:** https://speplinski.github.io/ksef_test/  
+**Repo:** https://github.com/speplinski/ksef_test
+
 ## Struktura
 
 ```
@@ -22,17 +25,19 @@ Otwórz `code/index.html` w przeglądarce — działa bez serwera ani zależnoś
 
 ## Publikacja na GitHub Pages
 
-1. Utwórz repo na GitHubie (publiczne — Pages dla prywatnych wymaga planu Pro/Team).
-2. Podlinkuj remote i wypchnij `main`:
-   ```bash
-   git remote add origin git@github.com:USER/REPO.git
-   git push -u origin main
-   ```
-3. W repo: **Settings → Pages → Build and deployment**
-   - Source: **GitHub Actions**
-4. Workflow `Deploy GitHub Pages` uruchomi się automatycznie po pushu. Po chwili prototyp jest pod `https://USER.github.io/REPO/`.
+Repo jest skonfigurowane do publikacji przez GitHub Actions. Workflow pakuje zawartość folderu `code/` i wystawia ją jako root strony (czyli `code/index.html` staje się stroną główną pod czystym URL-em).
 
-Workflow pakuje zawartość folderu `code/` i publikuje ją jako root strony — czyli `code/index.html` staje się stroną główną pod czystym URL-em.
+```bash
+# pierwszy push
+git push -u origin main
+
+# kolejne zmiany
+git add -A
+git commit -m "opis"
+git push
+```
+
+Jednorazowo w repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**. Po pushu w zakładce **Actions** uruchomi się workflow „Deploy GitHub Pages". Po ok. minucie strona jest dostępna pod https://speplinski.github.io/ksef_test/.
 
 ## Co jest w prototypie
 
