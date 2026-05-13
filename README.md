@@ -48,3 +48,6 @@ Interakcje: klik w wiersz tabeli otwiera drawer szczegółu z timeline KSeF, prz
 ## Konwencja commitów
 
 Krótkie, opisowe komunikaty w trybie rozkazującym, np. `dodaj widok korekt`, `popraw kolory pill warn`, `rozbij CSS do osobnego pliku`.
+
+
+Coś zmieniam.
