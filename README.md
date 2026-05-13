@@ -2,7 +2,7 @@
 
 Prototyp interfejsu integracji z Krajowym Systemem e-Faktur (KSeF). Agnostyczny — bez brandingu, neutralna paleta, gotowy do iteracji.
 
-**Live preview:** https://speplinski.github.io/ksef_test/  
+**Live preview:** https://speplinski.github.io/ksef_test/code/  
 **Repo:** https://github.com/speplinski/ksef_test
 
 ## Struktura
@@ -13,7 +13,7 @@ ksef/
 │   ├── index.html           # pojedynczy plik HTML (CSS + JS inline) — entry Pages
 │   └── .nojekyll            # wyłącza Jekyll dla publikowanego artefaktu
 ├── .github/workflows/
-│   └── pages.yml            # workflow: publikuje folder code/ na GitHub Pages
+│   └── pages.yml            # workflow: publikuje całe repo na GitHub Pages (strona pod /code/)
 ├── requirements.md          # wymagania / notatki
 ├── .gitignore
 └── README.md
@@ -25,7 +25,7 @@ Otwórz `code/index.html` w przeglądarce — działa bez serwera ani zależnoś
 
 ## Publikacja na GitHub Pages
 
-Repo jest skonfigurowane do publikacji przez GitHub Actions. Workflow pakuje zawartość folderu `code/` i wystawia ją jako root strony (czyli `code/index.html` staje się stroną główną pod czystym URL-em).
+Repo jest skonfigurowane do publikacji przez GitHub Actions. Workflow pakuje całe repo i odzwierciedla jego strukturę 1:1 — czyli `code/index.html` jest dostępny pod `…/code/`.
 
 ```bash
 # pierwszy push
@@ -37,7 +37,7 @@ git commit -m "opis"
 git push
 ```
 
-Jednorazowo w repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**. Po pushu w zakładce **Actions** uruchomi się workflow „Deploy GitHub Pages". Po ok. minucie strona jest dostępna pod https://speplinski.github.io/ksef_test/.
+Jednorazowo w repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**. Po pushu w zakładce **Actions** uruchomi się workflow „Deploy GitHub Pages". Po ok. minucie strona jest dostępna pod https://speplinski.github.io/ksef_test/code/.
 
 ## Co jest w prototypie
 
