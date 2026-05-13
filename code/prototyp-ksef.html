@@ -26,6 +26,10 @@
     --danger-soft: #fbe5e3;
     --info: #1f6feb;
     --info-soft: #e6efff;
+    --grid: #eef0f3;
+    --avatar-bg: #dde2ee;
+    --row-hover: color-mix(in srgb, var(--accent-soft) 35%, white);
+    --mask: rgba(15,23,42,.35);
     --radius: 10px;
     --radius-sm: 6px;
     --shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 1px rgba(15,23,42,.03);
@@ -33,6 +37,59 @@
     --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
+
+  /* DARK THEME */
+  [data-theme="dark"] {
+    --bg: #0b0f17;
+    --surface: #121823;
+    --surface-2: #182030;
+    --border: #232c3d;
+    --border-strong: #2d384c;
+    --text: #e6edf3;
+    --text-2: #b1bccb;
+    --text-3: #7d8694;
+    --primary: #e6edf3;
+    --primary-2: #ffffff;
+    --accent: #6ea0ff;
+    --accent-soft: rgba(110,160,255,.14);
+    --success: #4cc38a;
+    --success-soft: rgba(76,195,138,.14);
+    --warning: #e8b059;
+    --warning-soft: rgba(232,176,89,.14);
+    --danger: #ef6f66;
+    --danger-soft: rgba(239,111,102,.16);
+    --info: #6ea0ff;
+    --info-soft: rgba(110,160,255,.14);
+    --grid: #1f2a3d;
+    --avatar-bg: #2a3650;
+    --row-hover: rgba(110,160,255,.08);
+    --mask: rgba(0,0,0,.65);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.35), 0 1px 1px rgba(0,0,0,.2);
+    --shadow-md: 0 8px 24px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+  [data-theme="dark"] .btn.primary { background: var(--accent); color: #0b0f17; border-color: var(--accent); }
+  [data-theme="dark"] .btn.primary:hover { background: #82b0ff; border-color: #82b0ff; }
+  [data-theme="dark"] .env { background: rgba(232,176,89,.16); color: var(--warning); border-color: rgba(232,176,89,.35); }
+  [data-theme="dark"] .avatar { color: var(--text); }
+  [data-theme="dark"] .brand .logo { background: linear-gradient(135deg, #2a3650, #44557a); }
+  [data-theme="dark"] thead th { background: var(--surface-2); }
+  [data-theme="dark"] .pill.ok    { background: var(--success-soft); border-color: rgba(76,195,138,.32); }
+  [data-theme="dark"] .pill.warn  { background: var(--warning-soft); border-color: rgba(232,176,89,.32); }
+  [data-theme="dark"] .pill.err   { background: var(--danger-soft);  border-color: rgba(239,111,102,.32); }
+  [data-theme="dark"] .pill.info  { background: var(--info-soft);    border-color: rgba(110,160,255,.32); }
+  [data-theme="dark"] .pill.neutral { background: var(--surface-2); }
+  [data-theme="dark"] .activity .ic.ok   { border-color: rgba(76,195,138,.32); }
+  [data-theme="dark"] .activity .ic.warn { border-color: rgba(232,176,89,.32); }
+  [data-theme="dark"] .activity .ic.err  { border-color: rgba(239,111,102,.32); }
+  [data-theme="dark"] .activity .ic.info { border-color: rgba(110,160,255,.32); }
+  [data-theme="dark"] .radio.checked { border-color: var(--accent); background: var(--accent-soft); }
+  [data-theme="dark"] .chip-btn.active { background: var(--accent-soft); border-color: rgba(110,160,255,.32); color: var(--accent); }
+  [data-theme="dark"] .nav-item.active { background: var(--accent-soft); border-color: rgba(110,160,255,.28); color: var(--accent); }
+  [data-theme="dark"] .nav-item.active .badge { background: rgba(0,0,0,.25); border-color: rgba(110,160,255,.28); color: var(--accent); }
+  [data-theme="dark"] .timeline .step .marker { background: var(--success-soft); color: var(--success); border-color: rgba(76,195,138,.32); }
+  [data-theme="dark"] .timeline .step.pending .marker { background: var(--surface-2); }
+  [data-theme="dark"] .timeline .step.err .marker { background: var(--danger-soft); color: var(--danger); border-color: rgba(239,111,102,.32); }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
   button { font-family: inherit; cursor: pointer; }
@@ -55,7 +112,7 @@
   .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; color: var(--text-2); }
   .icon-btn:hover { background: var(--surface-2); }
   .user { display: inline-flex; align-items: center; gap: 8px; padding-left: 10px; border-left: 1px solid var(--border); margin-left: 4px; }
-  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #dde2ee; color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--avatar-bg); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; }
 
   /* Sidebar */
   .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 56px; height: calc(100vh - 56px); overflow: auto; }
@@ -145,7 +202,7 @@
   thead th { text-align: left; font-weight: 500; font-size: 12px; color: var(--text-3); padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
   tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   tbody tr:last-child td { border-bottom: 0; }
-  tbody tr:hover { background: color-mix(in srgb, var(--accent-soft) 35%, white); cursor: pointer; }
+  tbody tr:hover { background: var(--row-hover); cursor: pointer; }
   td .mono { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
   td .num { text-align: right; }
   .right { text-align: right; }
@@ -165,7 +222,7 @@
   .pill.neutral .dot { background: var(--text-3); }
 
   /* Drawer */
-  .drawer-mask { position: fixed; inset: 0; background: rgba(15,23,42,.35); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 40; }
+  .drawer-mask { position: fixed; inset: 0; background: var(--mask); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 40; }
   .drawer-mask.open { opacity: 1; pointer-events: auto; }
   .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 560px; background: var(--surface); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .25s ease; z-index: 41; display: flex; flex-direction: column; box-shadow: -16px 0 32px rgba(15,23,42,.08); }
   .drawer.open { transform: translateX(0); }
@@ -191,7 +248,7 @@
   .drawer .footer { margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; background: var(--surface-2); }
 
   /* Modal */
-  .modal-mask { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .modal-mask { position: fixed; inset: 0; background: var(--mask); display: none; align-items: center; justify-content: center; z-index: 50; }
   .modal-mask.open { display: flex; }
   .modal { background: var(--surface); border-radius: 12px; width: 640px; max-width: 92vw; box-shadow: 0 24px 64px rgba(15,23,42,.18); overflow: hidden; }
   .modal header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
@@ -240,6 +297,10 @@
       <input placeholder="Szukaj po numerze, NIP, KSeF ID…" />
       <span class="kbd">⌘K</span>
     </label>
+    <button class="icon-btn" id="themeToggle" title="Przełącz motyw (jasny / ciemny)" aria-label="Przełącz motyw">
+      <svg id="themeIconSun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg id="themeIconMoon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
     <button class="icon-btn" title="Powiadomienia">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9Z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
     </button>
@@ -380,7 +441,7 @@
               </linearGradient>
             </defs>
             <!-- grid -->
-            <g stroke="#eef0f3">
+            <g style="stroke: var(--grid)">
               <line x1="0" y1="40" x2="600" y2="40"/>
               <line x1="0" y1="80" x2="600" y2="80"/>
               <line x1="0" y1="120" x2="600" y2="120"/>
@@ -1108,6 +1169,31 @@
     const original = btn.innerHTML;
     btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="50 80"/></svg> Synchronizuję…`;
     setTimeout(() => btn.innerHTML = original, 900);
+  });
+
+  // ---------- THEME (dark / light) ----------
+  const THEME_KEY = "ksef-connect:theme";
+  const sun = document.getElementById("themeIconSun");
+  const moon = document.getElementById("themeIconMoon");
+  function applyTheme(t) {
+    if (t === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+      sun.style.display = "none"; moon.style.display = "";
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      sun.style.display = ""; moon.style.display = "none";
+    }
+  }
+  // initial: saved preference > system preference > light
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (_) {}
+  if (!saved) saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  applyTheme(saved);
+  document.getElementById("themeToggle").addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    const next = current === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (_) {}
   });
 
   // keyboard
