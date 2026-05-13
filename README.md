@@ -8,14 +8,31 @@ Prototyp interfejsu integracji z Krajowym Systemem e-Faktur (KSeF). Agnostyczny 
 ksef/
 ├── code/
 │   └── prototyp-ksef.html   # pojedynczy plik HTML (CSS + JS inline)
+├── index.html               # launcher → przekierowanie pod GitHub Pages
+├── .nojekyll                # wyłącza Jekyll na GitHub Pages
 ├── requirements.md          # wymagania / notatki
 ├── .gitignore
 └── README.md
 ```
 
-## Uruchomienie
+## Uruchomienie lokalne
 
-Otwórz `code/prototyp-ksef.html` w przeglądarce — działa lokalnie, bez serwera ani zależności.
+Otwórz `code/prototyp-ksef.html` (lub `index.html`) w przeglądarce — działa bez serwera ani zależności.
+
+## Publikacja na GitHub Pages
+
+1. Utwórz repo na GitHubie (publiczne — Pages dla prywatnych wymaga planu Pro/Team).
+2. Podlinkuj remote i wypchnij `main`:
+   ```bash
+   git remote add origin git@github.com:USER/REPO.git
+   git push -u origin main
+   ```
+3. W repo: **Settings → Pages → Build and deployment**
+   - Source: **Deploy from a branch**
+   - Branch: **main** · folder: **/ (root)**
+4. Po chwili prototyp będzie dostępny pod `https://USER.github.io/REPO/`.
+
+`index.html` w roocie przekierowuje na `code/prototyp-ksef.html`, więc edytujesz tylko jeden plik.
 
 ## Co jest w prototypie
 
