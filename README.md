@@ -7,9 +7,10 @@ Prototyp interfejsu integracji z Krajowym Systemem e-Faktur (KSeF). Agnostyczny 
 ```
 ksef/
 ├── code/
-│   └── prototyp-ksef.html   # pojedynczy plik HTML (CSS + JS inline)
-├── index.html               # launcher → przekierowanie pod GitHub Pages
-├── .nojekyll                # wyłącza Jekyll na GitHub Pages
+│   ├── index.html           # pojedynczy plik HTML (CSS + JS inline) — entry Pages
+│   └── .nojekyll            # wyłącza Jekyll dla publikowanego artefaktu
+├── .github/workflows/
+│   └── pages.yml            # workflow: publikuje folder code/ na GitHub Pages
 ├── requirements.md          # wymagania / notatki
 ├── .gitignore
 └── README.md
@@ -17,7 +18,7 @@ ksef/
 
 ## Uruchomienie lokalne
 
-Otwórz `code/prototyp-ksef.html` (lub `index.html`) w przeglądarce — działa bez serwera ani zależności.
+Otwórz `code/index.html` w przeglądarce — działa bez serwera ani zależności.
 
 ## Publikacja na GitHub Pages
 
@@ -28,11 +29,10 @@ Otwórz `code/prototyp-ksef.html` (lub `index.html`) w przeglądarce — działa
    git push -u origin main
    ```
 3. W repo: **Settings → Pages → Build and deployment**
-   - Source: **Deploy from a branch**
-   - Branch: **main** · folder: **/ (root)**
-4. Po chwili prototyp będzie dostępny pod `https://USER.github.io/REPO/`.
+   - Source: **GitHub Actions**
+4. Workflow `Deploy GitHub Pages` uruchomi się automatycznie po pushu. Po chwili prototyp jest pod `https://USER.github.io/REPO/`.
 
-`index.html` w roocie przekierowuje na `code/prototyp-ksef.html`, więc edytujesz tylko jeden plik.
+Workflow pakuje zawartość folderu `code/` i publikuje ją jako root strony — czyli `code/index.html` staje się stroną główną pod czystym URL-em.
 
 ## Co jest w prototypie
 
